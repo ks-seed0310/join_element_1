@@ -122,19 +122,26 @@ def update_and_verify(filename):
         print(f"エラー: {e}")
         return False
 
-# --- 実行部分 ---
+# --- 修正後の 実行部分 ---
 if __name__ == "__main__":
     # 1. 自分自身 (Untitled_16.py) を先にチェック
     if update_and_verify("Untitled_16.py"):
         print("🚀 本体を更新しました。再起動します...")
-        subprocess.Popen([sys.executable, "Untitled_16.py"])
-        sys.exit()
+        
+        # --- ここを書き換え！ ---
+        # 今のプログラムを完全に終了して、全く同じ条件で自分自身を起動し直します。
+        # これにより、キーボード入力(input)がエラーにならずに引き継がれます。
+        os.execv(sys.executable, [sys.executable, "Untitled_16.py"])
+        # ----------------------
 
     # 2. その他のファイルをチェック
     for target in ["u16_imp1.py", "u16_imp2.py"]:
         update_and_verify(target)
     
     print("\n--- 全ファイル最新です。ゲームを起動します ---")
+
+    # --- ここから下に、元々あったゲームのコードが続きます ---
+#^^^^^^From Gemini
     
 from u16_imp1 import *
 from u16_imp2 import *
@@ -453,7 +460,7 @@ else:
 del i
 while True:
     print(f"""
-元素パズル簡易版　:ver.1.0.0.0(Dev-1.0.0d01a)
+元素パズル簡易版　:ver.1.1.39.24(Dev-1.1.0d39-140)
 たまに狂った出力が出ることがありますがご理解お願いいたします。
 コマンド説明　　　: command.about
 プログラム説明　　: program.about
