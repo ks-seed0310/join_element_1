@@ -5,3 +5,6 @@ joinelement1_no_update.eld
 をダウンロードしてください。
 
 C4F54AF8F4D073744D3430A0595F1A8D369E0D5C
+
+ver.1.1.0以降、すべてのアップデートはPGP指紋　C4F54AF8F4D073744D3430A0595F1A8D369E0D5C
+ によって保護されています
