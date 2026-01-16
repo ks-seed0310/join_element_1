@@ -76,46 +76,51 @@ def update_and_verify(filename):
     sig_url = file_url + ".asc"
     
     try:
-        # 1. サーバーからデータを取得
+        # 1. サーバーからデータを取得（バイナリモードで確実に）
         with urllib.request.urlopen(file_url) as f:
             server_content = f.read()
         
-        # 2. 【重要】ハッシュ比較：中身が同じならここで終了
         local_hash = get_local_file_hash(filename)
         server_hash = get_file_hash(server_content)
         
+        # デバッグ用：ハッシュが違う理由を表示
+        if local_hash != server_hash:
+            print(f"DEBUG: {filename} のハッシュが一致しません。")
+            print(f"  Local:  {local_hash}")
+            print(f"  Server: {server_hash}")
+
         if local_hash == server_hash:
             print(f"✨ {filename} は最新です。")
-            return False # 更新不要
+            return False
 
-        # 3. 違う場合のみ、署名をダウンロードして検証
-        print(f"🔄 {filename} の新しいバージョンが見つかりました。検証中...")
+        # 2. 署名をダウンロード
         with urllib.request.urlopen(sig_url) as s:
             sig_content = s.read()
 
+        # 3. 検証用に「バイナリ」として一時保存
         with open(f"{filename}.tmp", "wb") as f:
             f.write(server_content)
         with open(f"{filename}.asc.tmp", "wb") as f:
             f.write(sig_content)
 
-        # GPGで検証
-        subprocess.run(["gpg", "--import"], input=MY_PUBLIC_KEY.encode(), capture_output=True)
+        # 4. GPGで検証（inputもバイナリで渡す）
+        subprocess.run(["gpg", "--import"], input=MY_PUBLIC_KEY.encode('utf-8'), capture_output=True)
+        
+        # コマンドで直接ファイルを指定して検証
         result = subprocess.run(
             ["gpg", "--verify", f"{filename}.asc.tmp", f"{filename}.tmp"],
             capture_output=True, text=True
         )
 
-        # 4. 検証成功なら置換
         if result.returncode == 0:
             print(f"✅ 検証成功！ {filename} を更新します。")
             os.replace(f"{filename}.tmp", filename)
-            # 一時ファイル削除
             if os.path.exists(f"{filename}.asc.tmp"): os.remove(f"{filename}.asc.tmp")
             return True
         else:
+            # 失敗した場合、GPGが何を言っているか表示する
             print(f"❌ 警告：{filename} の署名が不正です！")
-            if os.path.exists(f"{filename}.tmp"): os.remove(f"{filename}.tmp")
-            if os.path.exists(f"{filename}.asc.tmp"): os.remove(f"{filename}.asc.tmp")
+            print(f"GPG Error Output: {result.stderr}") # これが重要！
             return False
 
     except Exception as e:
